@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Fake News Detection System</title>
+    <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Arimo' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Hind:300' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background-color: #f0f8ff;
+            font-family: 'Arimo', sans-serif;
+        }
+        .login {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px 25px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .login h1 {
+            font-family: 'Pacifico', cursive;
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 18px;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+        }
+        .checkboxes {
+            margin: 20px 0;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+        }
+        .checkbox-column {
+            display: flex;
+            flex-direction: column;
+        }
+        .checkboxes label {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .checkboxes label:hover {
+            cursor: pointer;
+        }
+        .results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login">
+        <h1>Fake News Detector</h1>
+
+        <form id="prediction-form" action="{{ url_for('predict')}}" method="POST">
+            <textarea placeholder="Share your News" name="message" rows="6" cols="50" required="required" style="font-size: 18pt"></textarea>
+            <br>
+
+            <div class="checkboxes">
+                <div class="checkbox-column">
+                    <label><input type="checkbox" name="checkbox_a"> Logistic Regression</label>
+                    <label><input type="checkbox" name="checkbox_b"> Gradient Boosting</label>
+                    <label><input type="checkbox" name="checkbox_c"> Random Forest</label>
+                </div>
+                <div class="checkbox-column">
+                    <label><input type="checkbox" name="checkbox_d"> Decision Tree</label>
+                    <label><input type="checkbox" name="checkbox_e"> Passive-Aggressive</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-large">Predict</button>
+        </form>
+        <div id="progress-container" style="display: none;">
+            <h2>Processing...</h2>
+            <progress id="progress-bar" value="0" max="100"></progress>
+            <span id="progress-percent">0%</span>
+        </div>
+        <form action="http://127.0.0.1:5001/">
+            <button type="submit" class="btn btn-primary btn-block btn-large">Add News</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').onsubmit = function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercent = document.getElementById('progress-percent');
+            progressContainer.style.display = 'block';
+
+            fetch(form.action, {
+                method: form.method,
+                body: formData
+            }).then(response => response.text())
+                .then(html => {
+                    document.open();
+                    document.write(html);
+                    document.close();
+                });
+
+            function updateProgress() {
+                fetch('/progress')
+                    .then(response => response.json())
+                    .then(data => {
+                        progressBar.value = data.progress;
+                        progressPercent.innerText = `${Math.round(data.progress)}%`;
+                        if (data.progress < 100) {
+                            setTimeout(updateProgress, 100);
+                        }
+                    });
+            }
+
+            updateProgress();
+        };
+    </script>
+</body>
+</html>
