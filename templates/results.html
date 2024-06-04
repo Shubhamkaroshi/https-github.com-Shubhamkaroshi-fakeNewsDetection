@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .container h1 {
+            text-align: center;
+        }
+        .results-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .results-list li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .results-list li:last-child {
+            border-bottom: none;
+        }
+        .chart-container {
+            margin-top: 20px;
+        }
+        .back-link {
+            display: block;
+            margin: 20px 0;
+            text-align: center;
+            border: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Results</h1>
+        <ul class="results-list">
+            {% for result in results %}
+                <li>{{ result.model }} predicted: {{ result.prediction }} (Accuracy: {{ (result.accuracy * 100) | round(2) }}%)</li>
+            {% endfor %}
+        </ul>
+        <a class="back-link" href="{{ url_for('index') }}">Go Back</a>
+        <div class="chart-container">
+            <canvas id="accuracyChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const results = {{ results|tojson }};
+        const labels = results.map(result => result.model);
+        const data = results.map(result => (result.accuracy * 100).toFixed(2));
+
+        const ctx = document.getElementById('accuracyChart').getContext('2d');
+        const accuracyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Model Accuracy (%)',
+                    data: data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
